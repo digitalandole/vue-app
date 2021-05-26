@@ -1,9 +1,12 @@
 import Vue from "vue";
 import App from "./App.vue";
 import "@/assets/css/tailwind.css";
+import { VueSpinners } from "@saeris/vue-spinners";
 
 import router from "@/router";
 import { dollarFilter, precentFilter } from "@/filter";
+
+Vue.use(VueSpinners);
 
 Vue.filter("dollar", dollarFilter);
 Vue.filter("percent", precentFilter);
