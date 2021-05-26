@@ -86,20 +86,66 @@
           <span class="text-xl"></span>
         </div>
       </div>
+      <div>
+        <p class="red" :class="color">hola</p>
+      </div>
+      <div>
+        <line-chart
+          class="my-10"
+          :colors="['orange']"
+          :min="min"
+          :max="max"
+          :data="
+            history.map((h) => [h.date, parseFloat(h.priceUsd).toFixed(2)])
+          "
+        ></line-chart>
+      </div>
     </template>
+    <div>
+      <h3 class="text-xl my-10">Mejores Ofertas de Cambio</h3>
+      <table>
+        <tr
+          v-for="m in markets"
+          :key="`${m.exchangeId}-${m.priceUsd}`"
+          class="border-b"
+        >
+          <td>
+            <b>{{ m.exchangeId }}</b>
+          </td>
+          <td>{{ m.priceUsd }}</td>
+          <td>{{ m.symbol }}</td>
+          <td>
+            <px-button v-if="!m.url" @custom-click="getWebSite(m)">
+              <slot> Obtener Link </slot>
+            </px-button>
+            <a v-else class="hover:underline text-green-600" target="_blanck">{{
+              m.url
+            }}</a>
+
+            <a class="hover:underline text-green-600" target="_blanck"></a>
+          </td>
+        </tr>
+      </table>
+    </div>
   </div>
 </template>
 
 <script>
 import api from "@/api";
+import PxButton from "@/components/PxButton";
 export default {
   name: "CoinDetail",
   data() {
     return {
       asset: {},
       history: [],
+      markets: [],
       isLoading: false,
+      color: "yellow",
     };
+  },
+  components: {
+    PxButton,
   },
 
   computed: {
@@ -126,14 +172,24 @@ export default {
   },
 
   methods: {
+    getWebSite(exchange) {
+      api.getExchange(exchange.exchangeId).then((res) => {
+        this.$set(exchange, "url", res.exchangeUrl);
+      });
+    },
     getCoin() {
       const id = this.$route.params.id;
       this.isLoading = true;
 
-      Promise.all([api.getAsset(id), api.getAssetHistory(id)])
-        .then(([asset, history]) => {
+      Promise.all([
+        api.getAsset(id),
+        api.getAssetHistory(id),
+        api.getMarkets(id),
+      ])
+        .then(([asset, history, markets]) => {
           this.asset = asset;
           this.history = history;
+          this.markets = markets;
         })
         .finally(() => {
           this.isLoading = false;
@@ -142,3 +198,12 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.red {
+  color: red;
+}
+.yellow {
+  color: yellow;
+}
+</style>
